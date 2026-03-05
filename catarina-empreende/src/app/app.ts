@@ -8,13 +8,15 @@ import { Button } from 'primeng/button';
   selector: 'app-root',
   imports: [RouterOutlet, Menubar, Button],
   template: `
-    <p-menubar [model]="items">
-        <ng-template #end>
-            <p-button [icon]="isDarkMode() ? 'pi pi-sun' : 'pi pi-moon'" [rounded]="true" [text]="true" (onClick)="toggleDarkMode()" />
-        </ng-template>
-    </p-menubar>
+    <div style="position: sticky; top: 0; z-index: 1000; left: 0; width: 100%;">
+      <p-menubar [model]="items">
+          <ng-template #end>
+              <p-button [icon]="isDarkMode() ? 'pi pi-sun' : 'pi pi-moon'" [rounded]="true" [text]="true" (onClick)="toggleDarkMode()" />
+          </ng-template>
+      </p-menubar>
+    </div>
 
-    <div style="padding: 2rem;">
+    <div style="padding: 1rem;">
       <router-outlet />
     </div>
   `,

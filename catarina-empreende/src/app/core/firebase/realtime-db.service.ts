@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Database, ref, set, get, update, remove, child, DataSnapshot } from '@angular/fire/database';
+import { Database } from '@angular/fire/database';
+import { ref, set, get, update, remove, child, DataSnapshot } from 'firebase/database';
 
 @Injectable({
     providedIn: 'root'

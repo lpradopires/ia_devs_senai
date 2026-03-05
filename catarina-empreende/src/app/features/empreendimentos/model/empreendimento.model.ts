@@ -3,6 +3,7 @@ export type SegmentoAtuacao =
     | 'Comércio'
     | 'Indústria'
     | 'Serviços'
+    | 'Serviço Público'
     | 'Agronegócio';
 
 export type StatusEmpreendimento = 'ativo' | 'inativo';
@@ -23,10 +24,12 @@ export interface Geolocalizacao {
 export interface Empreendimento {
     id?: string;
     nomeEmpreendimento: string;
+    descricao: string; // Descrição curta das atividades ou propósito
     nomeEmpreendedor: string;
     municipio: string;
     segmentoAtuacao: SegmentoAtuacao;
     contato: string; // E-mail ou meio de contato
+    whatsapp: string; // Número de WhatsApp
     status: StatusEmpreendimento;
     imagens: string[]; // Lista de URLs ou caminhos das imagens
     endereco: Endereco;
