@@ -6,19 +6,19 @@
 
 ## 📋 Índice de Navegação
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Funcionalidades](#funcionalidades)
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Pré-requisitos](#pré-requisitos)
-- [Como Rodar Localmente](#como-rodar-localmente)
-- [Deploy da Aplicação](#deploy-da-aplicação)
-- [Vídeo Pitch](#vídeo-pitch)
-- [Decisões Técnicas e Boas Práticas](#decisões-técnicas-e-boas-práticas)
-- [Estratégia de Versionamento (Git)](#estratégia-de-versionamento-git)
-- [Melhorias Futuras](#melhorias-futuras)
-- [Referências](#referências)
-- [Autor](#autor)
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Funcionalidades](#-funcionalidades)
+- [Tecnologias Utilizadas](#️-tecnologias-utilizadas)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Pré-requisitos](#-pré-requisitos)
+- [Como Rodar Localmente](#️-como-rodar-localmente)
+- [Deploy da Aplicação](#-deploy-da-aplicação)
+- [Vídeo Pitch](#-vídeo-pitch)
+- [Decisões Técnicas e Boas Práticas](#️-decisões-técnicas-e-boas-práticas)
+- [Estratégia de Versionamento (Git)](#-estratégia-de-versionamento-git)
+- [Melhorias Futuras](#-melhorias-futuras)
+- [Referências](#-referências)
+- [Autor](#-autor)
 
 ---
 
