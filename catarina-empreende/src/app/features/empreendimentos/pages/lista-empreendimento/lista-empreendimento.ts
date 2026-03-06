@@ -1,7 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { EmpreendimentoService } from '../../services/empreendimento.service';
 import { Empreendimento, SegmentoAtuacao, StatusEmpreendimento } from '../../model/empreendimento.model';
+import { FormularioEmpreendimento } from '../formulario-empreendimento/formulario-empreendimento';
 
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -12,124 +14,167 @@ import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-lista-empreendimento',
   imports: [
-    CommonModule, TableModule, ButtonModule, DialogModule, ImageModule, TagModule, InputTextModule, IconFieldModule, InputIconModule, TooltipModule
+    CommonModule,
+    TableModule, ButtonModule, DialogModule, ImageModule, TagModule,
+    InputTextModule, IconFieldModule, InputIconModule, TooltipModule,
+    ConfirmDialogModule,
+    FormularioEmpreendimento
   ],
+  providers: [ConfirmationService],
   template: `
-    <div class="card" style="margin: 0 auto; max-width: 1400px; width: 95%;">
+    <p-confirmdialog />
+
+    <div class="card" style="width: 100%; padding: 0 1.9rem;">
         <h3 style="margin-top: 0; margin-bottom: 1rem;">Empreendimentos Catarinenses</h3>
-        
-        <p-table 
+
+        <p-table
             #dt
-            [value]="empreendimentos()" 
-            [paginator]="true" 
-            [rows]="10" 
+            [value]="listaEmpreendimentos()"
+            [paginator]="true"
+            [rows]="10"
             [scrollable]="true"
             [stripedRows]="true"
             scrollHeight="calc(100vh - 280px)"
-            [tableStyle]="{ 'min-width': '80rem' }"
+            [tableStyle]="{ 'min-width': '120rem' }"
             styleClass="p-datatable-striped p-datatable-sm p-datatable-gridlines"
             [globalFilterFields]="['nomeEmpreendimento', 'descricao', 'nomeEmpreendedor', 'contato', 'whatsapp', 'segmentoAtuacao', 'municipio', 'status', 'endereco.logradouro']"
         >
             <ng-template #caption>
-                <div style="display: flex; justify-content: flex-start;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
                     <p-iconfield iconPosition="left">
                         <p-inputicon styleClass="pi pi-search" />
-                        <input 
-                            pInputText 
-                            type="text" 
-                            (input)="dt.filterGlobal($any($event.target).value, 'contains')" 
-                            placeholder="Buscar Empreendimento..." 
+                        <input
+                            pInputText
+                            type="text"
+                            (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+                            placeholder="Buscar Empreendimento..."
                             style="width: 20rem;"
                         />
                     </p-iconfield>
+
+                    <p-button
+                        label="Novo Empreendimento"
+                        icon="pi pi-plus"
+                        severity="success"
+                        (onClick)="abrirFormularioCriacao()"
+                    />
                 </div>
             </ng-template>
+
             <ng-template #header>
                 <tr>
-                    <th style="width: 8rem; text-align: center;">Ações</th>
-                    <th pSortableColumn="nomeEmpreendimento" style="min-width: 20rem;">
-                        Nome 
+                    <th style="width: 11rem; min-width: 11rem; text-align: center; white-space: nowrap;">Ações</th>
+                    <th pSortableColumn="nomeEmpreendimento" style="min-width: 22rem; white-space: nowrap;">
+                        Nome
                         <p-sortIcon field="nomeEmpreendimento" />
                     </th>
-                    <th pSortableColumn="descricao">
+                    <th pSortableColumn="descricao" style="min-width: 28rem; white-space: nowrap;">
                         Descrição
                         <p-sortIcon field="descricao" />
                     </th>
-                    <th pSortableColumn="segmentoAtuacao">
+                    <th pSortableColumn="segmentoAtuacao" style="min-width: 12rem; white-space: nowrap;">
                         Categoria
                         <p-sortIcon field="segmentoAtuacao" />
                     </th>
-                    <th pSortableColumn="municipio">
+                    <th pSortableColumn="municipio" style="min-width: 22rem; white-space: nowrap;">
                         Endereço
                         <p-sortIcon field="municipio" />
                     </th>
-                    <th pSortableColumn="status">
+                    <th pSortableColumn="status" style="min-width: 8rem; white-space: nowrap;">
                         Status
                         <p-sortIcon field="status" />
                     </th>
+                    <th pSortableColumn="dataCriacao" style="min-width: 10rem; white-space: nowrap;">
+                        Cadastrado em
+                        <p-sortIcon field="dataCriacao" />
+                    </th>
                 </tr>
             </ng-template>
+
             <ng-template #body let-emp>
                 <tr>
-                    <td style="text-align: center; white-space: nowrap;">
+                    <td style="text-align: center; white-space: nowrap; width: 11rem; min-width: 11rem;">
                         <span class="p-buttonset">
-                            <p-button 
-                                icon="pi pi-pencil" 
-                                severity="warn" 
-                                [rounded]="true" 
+                            <p-button
+                                icon="pi pi-pencil"
+                                severity="warn"
+                                [rounded]="true"
                                 [text]="true"
-                                pTooltip="Editar Item"
-                                (onClick)="editarEmpreendimento(emp)" 
+                                pTooltip="Editar"
+                                (onClick)="abrirFormularioEdicao(emp)"
                             />
-                            <p-button 
-                                icon="pi pi-image" 
-                                severity="info" 
-                                [rounded]="true" 
+                            <p-button
+                                icon="pi pi-image"
+                                severity="info"
+                                [rounded]="true"
                                 [text]="true"
                                 pTooltip="Visualizar Imagens"
-                                (onClick)="abrirImagens(emp)" 
+                                (onClick)="abrirImagens(emp)"
                             />
-                            <p-button 
-                                icon="pi pi-map-marker" 
-                                severity="secondary" 
+                            <p-button
+                                icon="pi pi-map-marker"
+                                severity="secondary"
                                 [rounded]="true"
                                 [text]="true"
                                 pTooltip="Ver no Mapa"
-                                (onClick)="abrirMapa(emp)" 
+                                (onClick)="abrirMapa(emp)"
+                            />
+                            <p-button
+                                icon="pi pi-trash"
+                                severity="danger"
+                                [rounded]="true"
+                                [text]="true"
+                                pTooltip="Excluir"
+                                (onClick)="excluirEmpreendimento(emp)"
                             />
                         </span>
                     </td>
-                    <td style="padding: 1rem 0.5rem;">
-                        <strong style="font-size: 1.15rem; color: var(--text-color); display: block; margin-bottom: 0.35rem;">{{ emp.nomeEmpreendimento }}</strong>
-                        <small style="color: gray; font-size: 0.8rem;">Responsável: {{ emp.nomeEmpreendedor }}</small>
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.25rem;">
-                            <small style="color: #6c757d; font-size: 0.8rem;"><i class="pi pi-envelope" style="font-size: 0.8rem; margin-right: 0.25rem;"></i>{{ emp.contato }}</small>
-                            <small style="color: #6c757d; font-size: 0.8rem;"><i class="pi pi-whatsapp" style="font-size: 0.8rem; margin-right: 0.25rem; color: #25D366;"></i>{{ emp.whatsapp }}</small>
+                    <td style="padding: 0.75rem 0.75rem; min-width: 22rem;">
+                        <strong style="font-size: 1rem; color: var(--text-color); display: block; margin-bottom: 0.25rem;">{{ emp.nomeEmpreendimento }}</strong>
+                        <small style="color: gray; font-size: 0.8rem; display: block;">Responsável: {{ emp.nomeEmpreendedor }}</small>
+                        <div style="display: flex; flex-direction: column; gap: 0.2rem; margin-top: 0.25rem;">
+                            <small style="color: #6c757d; font-size: 0.78rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 20rem;"><i class="pi pi-envelope" style="font-size: 0.75rem; margin-right: 0.25rem;"></i>{{ emp.contato }}</small>
+                            <small style="color: #6c757d; font-size: 0.78rem; white-space: nowrap;"><i class="pi pi-whatsapp" style="font-size: 0.75rem; margin-right: 0.25rem; color: #25D366;"></i>{{ emp.whatsapp }}</small>
                         </div>
                     </td>
-                    <td style="font-size: 0.85rem; color: #495057; line-height: 1.4;">
+                    <td style="font-size: 0.85rem; color: #495057; line-height: 1.5; min-width: 28rem; max-width: 32rem; padding: 0.75rem;">
                         {{ emp.descricao }}
                     </td>
-                    <td>
-                        <p-tag [value]="emp.segmentoAtuacao" [severity]="getSeverity(emp.segmentoAtuacao)" [style]="{ 'font-size': '0.7rem', 'padding': '0.2rem 0.4rem' }" />
+                    <td style="text-align: center; min-width: 12rem; white-space: nowrap;">
+                        <p-tag [value]="emp.segmentoAtuacao" [severity]="obterSeveridade(emp.segmentoAtuacao)" [style]="{ 'font-size': '0.72rem', 'padding': '0.25rem 0.5rem', 'white-space': 'nowrap' }" />
                     </td>
-                    <td style="font-size: 0.85rem; line-height: 1.4;">
-                        {{ emp.endereco?.logradouro }} - {{ emp.endereco?.bairro }}<br>
-                        <strong style="font-size: 0.9rem;">{{ emp.municipio }}</strong> <span style="color: gray; font-size: 0.8rem;">(CEP: {{ emp.endereco?.cep }})</span>
+                    <td style="font-size: 0.85rem; line-height: 1.5; min-width: 22rem; padding: 0.75rem;">
+                        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 20rem;">
+                            {{ emp.endereco?.logradouro }}{{ emp.endereco?.bairro ? ' - ' + emp.endereco?.bairro : '' }}
+                        </div>
+                        <div style="margin-top: 0.2rem;">
+                            <strong style="font-size: 0.9rem;">{{ emp.municipio }}</strong>
+                            <span style="color: gray; font-size: 0.78rem; margin-left: 0.4rem; white-space: nowrap;">CEP: {{ emp.endereco?.cep }}</span>
+                        </div>
                     </td>
-                    <td>
-                        <p-tag 
-                           [value]="getStatusDisplay(emp.status)" 
-                           [severity]="emp.status === 'ativo' ? 'success' : 'danger'" 
-                           [style]="{ 'font-size': '0.7rem', 'padding': '0.2rem 0.4rem' }"
+                    <td style="text-align: center; min-width: 8rem; white-space: nowrap;">
+                        <p-tag
+                           [value]="obterRotuloStatus(emp.status)"
+                           [severity]="emp.status === 'ativo' ? 'success' : 'danger'"
+                           [style]="{ 'font-size': '0.72rem', 'padding': '0.25rem 0.5rem' }"
                         />
+                    </td>
+                    <td style="text-align: center; min-width: 10rem; white-space: nowrap; font-size: 0.82rem; color: var(--text-color-secondary);">
+                        @if (emp.dataCriacao) {
+                            <div>{{ formatarData(emp.dataCriacao) }}</div>
+                        } @else {
+                            <span style="color: var(--surface-400, #aaa);">—</span>
+                        }
                     </td>
                 </tr>
             </ng-template>
+
             <ng-template #emptymessage>
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 2rem;">Nenhum empreendimento cadastrado.</td>
@@ -138,17 +183,35 @@ import { TooltipModule } from 'primeng/tooltip';
         </p-table>
     </div>
 
-    <p-dialog 
-        header="Imagens do Empreendimento" 
-        [(visible)]="displayDialog" 
-        [modal]="true" 
-        [style]="{ width: '50vw' }" 
-        [draggable]="false" 
+    <!-- Dialog: Formulário de Criação / Edição -->
+    <p-dialog
+        [header]="empreendimentoEmEdicao ? 'Editar Empreendimento' : 'Novo Empreendimento'"
+        [(visible)]="dialogFormularioVisivel"
+        [modal]="true"
+        [style]="{ width: '45rem' }"
+        [draggable]="false"
+        [resizable]="false"
+        (onHide)="aoFecharDialogFormulario()"
+    >
+        <app-formulario-empreendimento
+            [empreendimentoParaEditar]="empreendimentoEmEdicao"
+            (formularioSalvo)="aoSalvarFormulario()"
+            (formularioCancelado)="dialogFormularioVisivel = false"
+        />
+    </p-dialog>
+
+    <!-- Dialog: Imagens do Empreendimento -->
+    <p-dialog
+        header="Imagens do Empreendimento"
+        [(visible)]="dialogImagensVisivel"
+        [modal]="true"
+        [style]="{ width: '50vw' }"
+        [draggable]="false"
         [resizable]="false"
     >
-        @if (empreendimentoSelecionado?.imagens?.length) {
+        @if (empreendimentoEmFoco?.imagens?.length) {
             <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
-                @for (imagem of empreendimentoSelecionado?.imagens; track imagem) {
+                @for (imagem of empreendimentoEmFoco?.imagens; track imagem) {
                     <p-image [src]="imagem" alt="Imagem" width="250" [preview]="true" />
                 }
             </div>
@@ -163,31 +226,142 @@ import { TooltipModule } from 'primeng/tooltip';
   styles: ``,
 })
 export class ListaEmpreendimento implements OnInit {
-  private empreendimentoService = inject(EmpreendimentoService);
+  private readonly servicoEmpreendimento = inject(EmpreendimentoService);
+  private readonly servicoConfirmacao = inject(ConfirmationService);
 
-  // Variável reativa para a tabela
-  empreendimentos = signal<Empreendimento[]>([]);
+  /**
+   * Signal reativo alimentado pelo Observable em tempo real do Firebase.
+   * O `toSignal` cancela o listener automaticamente quando o componente é destruído.
+   * Valor inicial `[]` evita undefined enquanto o primeiro emit não chega.
+   */
+  listaEmpreendimentos = toSignal(
+    this.servicoEmpreendimento.observarTodos(),
+    { initialValue: [] as Empreendimento[] }
+  );
 
-  // Variáveis para controle do Modal de imagens
-  displayDialog: boolean = false;
-  empreendimentoSelecionado: Empreendimento | null = null;
+  // --- Controle do Dialog de Formulário ---
+  dialogFormularioVisivel: boolean = false;
+  empreendimentoEmEdicao: Empreendimento | null = null;
+
+  // --- Controle do Dialog de Imagens ---
+  dialogImagensVisivel: boolean = false;
+  empreendimentoEmFoco: Empreendimento | null = null;
 
   async ngOnInit() {
     await this.popularBancoDeDados();
-    await this.carregarEmpreendimentos();
   }
 
-  private async carregarEmpreendimentos() {
-    const dados = await this.empreendimentoService.buscarTodos();
-    this.empreendimentos.set(dados);
+  /** Abre o formulário em modo criação */
+  abrirFormularioCriacao(): void {
+    this.empreendimentoEmEdicao = null;
+    this.dialogFormularioVisivel = true;
+  }
+
+  /**
+   * Abre o formulário em modo edição, preenchendo os campos com os dados do empreendimento.
+   */
+  abrirFormularioEdicao(empreendimento: Empreendimento): void {
+    this.empreendimentoEmEdicao = empreendimento;
+    this.dialogFormularioVisivel = true;
+  }
+
+  /** Chamado ao salvar no formulário: apenas fecha o dialog (a lista atualiza via listener) */
+  aoSalvarFormulario(): void {
+    this.dialogFormularioVisivel = false;
+  }
+
+  /** Garante que o estado de edição é limpo ao fechar o dialog */
+  aoFecharDialogFormulario(): void {
+    this.empreendimentoEmEdicao = null;
+  }
+
+  /**
+   * Exibe o dialog de confirmação antes de excluir o empreendimento do Firebase.
+   */
+  excluirEmpreendimento(empreendimento: Empreendimento): void {
+    this.servicoConfirmacao.confirm({
+      message: `Deseja excluir o empreendimento <strong>${empreendimento.nomeEmpreendimento}</strong>? Esta ação não poderá ser desfeita.`,
+      header: 'Confirmar Exclusão',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sim, excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        if (empreendimento.id) {
+          await this.servicoEmpreendimento.excluir(empreendimento.id);
+          // A lista atualiza automaticamente via listener em tempo real
+        }
+      }
+    });
+  }
+
+  /** Converte timestamp Unix para o formato dd/MM/yyyy HH:mm */
+  formatarData(timestamp: number): string {
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }).format(new Date(timestamp));
+  }
+
+  /**
+   * Abre o dialog de imagens e define o empreendimento em foco.
+   * Utilizado pelo botão "Visualizar Imagens" na tabela.
+   */
+  abrirImagens(empreendimento: Empreendimento) {
+    this.empreendimentoEmFoco = empreendimento;
+    this.dialogImagensVisivel = true;
+  }
+
+  /**
+   * Abre o Google Maps em nova guia buscando pelo endereço do empreendimento.
+   * Prioriza o endereço textual (logradouro + bairro + cidade) em vez das coordenadas
+   * para garantir resultados mais precisos na busca do Maps.
+   */
+  abrirMapa(empreendimento: Empreendimento) {
+    const endereco = empreendimento.endereco;
+    const logradouro = endereco?.logradouro || '';
+    const bairro = endereco?.bairro ? `- ${endereco.bairro}` : '';
+    const cidade = empreendimento.municipio || '';
+
+    const enderecoCompleto = `${logradouro} ${bairro}, ${cidade}, SC`.trim();
+
+    if (!logradouro && !cidade) {
+      alert('Erro: Endereço indisponível para este empreendimento!');
+      return;
+    }
+
+    const parametroBusca = encodeURIComponent(enderecoCompleto);
+    const urlMapa = `https://www.google.com/maps/search/?api=1&query=${parametroBusca}`;
+    window.open(urlMapa, '_blank');
+  }
+
+  /**
+   * Define a severidade (cor) da Tag do PrimeNG com base no segmento de atuação.
+   * Cada segmento recebe uma cor semântica para facilitar a identificação visual na tabela.
+   */
+  obterSeveridade(segmento: SegmentoAtuacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
+    switch (segmento) {
+      case 'Tecnologia': return 'info';
+      case 'Comércio': return 'success';
+      case 'Serviços': return 'secondary';
+      case 'Indústria': return 'warn';
+      case 'Agronegócio': return 'contrast';
+      case 'Serviço Público': return 'danger';
+      default: return 'info';
+    }
+  }
+
+  /** Retorna o rótulo legível do status para exibição na Tag da tabela */
+  obterRotuloStatus(status: StatusEmpreendimento): string {
+    return status === 'ativo' ? 'Ativo' : 'Inativo';
   }
 
   private async popularBancoDeDados() {
-    const existentes = await this.empreendimentoService.buscarTodos();
+    const registrosExistentes = await this.servicoEmpreendimento.buscarTodos();
 
-    // Verifica se já existe algo gravado para evitar repetição ao atualizar a tela
-    if (existentes && existentes.length > 0) {
-      console.log(`Banco de dados já contém ${existentes.length} empreendimentos.`);
+    // Evita re-popular o banco ao recarregar a página
+    if (registrosExistentes && registrosExistentes.length > 0) {
+      console.log(`Banco de dados já contém ${registrosExistentes.length} empreendimentos.`);
       return;
     }
 
@@ -221,26 +395,24 @@ export class ListaEmpreendimento implements OnInit {
     const logradouros = ['Rua XV de Novembro', 'Avenida Brasil', 'Rua Felipe Schmidt', 'Avenida Beira Mar', 'Rua das Flores', 'Rodovia SC-401', 'Rua Sete de Setembro', 'Avenida Central', 'Rua Almirante Barroso', 'Rua João Pinto', 'Avenida Hercílio Luz', 'Rua Bocaiúva', 'Rua Tenente Silveira', 'Rodovia BR-101', 'Rua Anita Garibaldi', 'Avenida Mauro Ramos', 'Rua Conselheiro Mafra', 'Rua Trajano', 'Avenida Rio Branco', 'Rodovia Admar Gonzaga'];
     const bairros = ['Centro', 'Trindade', 'Kobrasol', 'Campinas', 'Agronômica', 'Itacorubi', 'Saco Grande', 'Estreito', 'Coqueiros', 'Atiradores', 'Vila Nova', 'Fazenda', 'Pioneiros', 'Eficapi', 'Próspera', 'Coral', 'Oficinas', 'Barra', 'Azambuja', 'Canta Galo'];
 
-    const mockEmpreendimentos: Empreendimento[] = Array.from({ length: 20 }, (_, i) => {
-      const empresa = empresas[i];
-      const status = i % 4 === 0 ? 'inativo' : 'ativo'; // ~25% inativos
-
-      // Gera um número de WhatsApp fictício, ex: 48 99999-0000
-      const numeroWhats = `(48) 9${Math.floor(Math.random() * 9000) + 1000}-${Math.floor(Math.random() * 9000) + 1000}`;
+    const mockEmpreendimentos: Empreendimento[] = Array.from({ length: 20 }, (_, indice) => {
+      const empresa = empresas[indice];
+      const statusGerado = indice % 4 === 0 ? 'inativo' : 'ativo';
+      const numeroWhatsApp = `(48) 9${Math.floor(Math.random() * 9000) + 1000}-${Math.floor(Math.random() * 9000) + 1000}`;
 
       return {
         nomeEmpreendimento: empresa.nome,
         descricao: empresa.desc,
-        nomeEmpreendedor: empreendedores[i],
-        municipio: municipios[i],
+        nomeEmpreendedor: empreendedores[indice],
+        municipio: municipios[indice],
         segmentoAtuacao: empresa.seg as SegmentoAtuacao,
         contato: `contato@${empresa.nome.toLowerCase().replace(/[^a-z0-9]/g, '')}.com.br`,
-        whatsapp: numeroWhats,
-        status: status as StatusEmpreendimento,
+        whatsapp: numeroWhatsApp,
+        status: statusGerado as StatusEmpreendimento,
         imagens: [],
         endereco: {
-          logradouro: `${logradouros[i]}, ${Math.floor(Math.random() * 1000) + 1}`,
-          bairro: bairros[i],
+          logradouro: `${logradouros[indice]}, ${Math.floor(Math.random() * 1000) + 1}`,
+          bairro: bairros[indice],
           cep: `88${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 900) + 100}`
         },
         geolocalizacao: {
@@ -251,67 +423,9 @@ export class ListaEmpreendimento implements OnInit {
     });
 
     for (const empreendimento of mockEmpreendimentos) {
-      await this.empreendimentoService.criar(empreendimento);
+      await this.servicoEmpreendimento.criar(empreendimento);
     }
 
     console.log('20 Empreendimentos inseridos com sucesso!');
-  }
-
-  /**
- * Define a cor da Tag do PrimeNG baseada no segmento de atuação.
- */
-  getSeverity(segmento: SegmentoAtuacao): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
-    switch (segmento) {
-      case 'Tecnologia': return 'info';
-      case 'Comércio': return 'success';
-      case 'Serviços': return 'secondary';
-      case 'Indústria': return 'warn';
-      case 'Agronegócio': return 'contrast';
-      case 'Serviço Público': return 'danger';
-      default: return 'info';
-    }
-  }
-
-  getStatusDisplay(status: StatusEmpreendimento): string {
-    return status === 'ativo' ? 'Ativo' : 'Inativo';
-  }
-
-  /**
-   * Acionado pelo botão "Imagens" na tabela, abre o Dialog modal e seta o item clicado.
-   */
-  abrirImagens(empreendimento: Empreendimento) {
-    this.empreendimentoSelecionado = empreendimento;
-    this.displayDialog = true;
-  }
-
-  /**
-   * Placeholder acionado pelo botão "Editar" na tabela.
-   * Será implementado futuramente.
-   */
-  editarEmpreendimento(empreendimento: Empreendimento) {
-    console.log('Botão Editar clicado para:', empreendimento.nomeEmpreendimento);
-    // TODO: Adicionar lógica para abrir modal/página de formulário para edição.
-  }
-
-  /**
-   * Acionado pelo botão "Mapa", direciona o usuário para o Google Maps em uma nova guia,
-   * buscando pelo endereço (logradouro, bairro, cidade, estado) em vez da geolocalização.
-   */
-  abrirMapa(empreendimento: Empreendimento) {
-    const endereco = empreendimento.endereco;
-    const logradouro = endereco?.logradouro || '';
-    const bairro = endereco?.bairro ? `- ${endereco.bairro}` : '';
-    const cidade = empreendimento.municipio || '';
-
-    const enderecoCompleto = `${logradouro} ${bairro}, ${cidade}, SC`.trim();
-
-    if (!logradouro && !cidade) {
-      alert('Erro: Endereço indisponível para este empreendimento!');
-      return;
-    }
-
-    const query = encodeURIComponent(enderecoCompleto);
-    const mapUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
-    window.open(mapUrl, '_blank');
   }
 }

@@ -1,13 +1,47 @@
 import { Injectable, inject } from '@angular/core';
-import { RealtimeDbService } from '../../../core/firebase/realtime-db.service';
+import { Database, ref, onValue } from '@angular/fire/database';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Empreendimento } from '../model/empreendimento.model';
+import { RealtimeDbService } from '../../../core/firebase/realtime-db.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class EmpreendimentoService {
-    private dbService = inject(RealtimeDbService);
+    private readonly dbService = inject(RealtimeDbService);
+    private readonly db = inject(Database);
     private readonly PATH = 'empreendimentos';
+
+    /**
+     * Retorna um Observable que emite a lista completa de empreendimentos
+     * em tempo real. O Firebase mantém um listener ativo e notifica todos
+     * os clientes conectados sempre que qualquer dado for alterado.
+     */
+    observarTodos(): Observable<Empreendimento[]> {
+        return new Observable<Empreendimento[]>(observador => {
+            const referencia = ref(this.db, this.PATH);
+
+            const cancelarEscuta = onValue(referencia, (snapshot) => {
+                if (snapshot.exists()) {
+                    const dados = snapshot.val();
+                    observador.next(Object.values<Empreendimento>(dados));
+                } else {
+                    observador.next([]);
+                }
+            }, (erro) => {
+                observador.error(erro);
+            });
+
+            return () => cancelarEscuta();
+        }).pipe(
+            // Ordena do mais recente para o mais antigo.
+            // Registros sem dataCriacao (legados) ficam no final.
+            map(lista => lista.sort((a, b) =>
+                (b.dataCriacao ?? 0) - (a.dataCriacao ?? 0)
+            ))
+        );
+    }
 
     /**
      * Cria um novo empreendimento no banco de dados.
@@ -17,7 +51,11 @@ export class EmpreendimentoService {
      */
     async criar(empreendimento: Empreendimento): Promise<string> {
         const id = empreendimento.id || crypto.randomUUID();
-        const novoEmpreendimento = { ...empreendimento, id };
+        const novoEmpreendimento: Empreendimento = {
+            ...empreendimento,
+            id,
+            dataCriacao: Date.now()
+        };
 
         await this.dbService.create(`${this.PATH}/${id}`, novoEmpreendimento);
         return id;

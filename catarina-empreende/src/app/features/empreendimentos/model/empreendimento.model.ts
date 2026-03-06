@@ -23,6 +23,7 @@ export interface Geolocalizacao {
 
 export interface Empreendimento {
     id?: string;
+    dataCriacao?: number; // Timestamp Unix em ms (Date.now()) — usado para ordenação
     nomeEmpreendimento: string;
     descricao: string; // Descrição curta das atividades ou propósito
     nomeEmpreendedor: string;
