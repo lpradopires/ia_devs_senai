@@ -473,7 +473,6 @@ style(formulario): padroniza espaçamento dos campos com variáveis CSS
 - [ ] **Mapa interativo** — visualizar todos os empreendimentos em um mapa com marcadores (Leaflet ou Google Maps API)
 - [ ] **PWA** — suporte offline com Service Workers
 - [ ] **Exportação de dados** — download da lista em formato CSV ou PDF
-- [x] **Testes unitários e de integração** — cobertura com Karma/Jasmine adaptados para Zoneless
 - [ ] **Testes E2E (End-to-End)** — cobertura estendida utilizando Cypress ou Playwright
 - [ ] **Internacionalização (i18n)** — suporte a múltiplos idiomas
 
