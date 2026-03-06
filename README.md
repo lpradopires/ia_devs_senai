@@ -12,6 +12,7 @@
 - [Estrutura do Projeto](#-estrutura-do-projeto)
 - [Pré-requisitos](#-pré-requisitos)
 - [Como Rodar Localmente](#️-como-rodar-localmente)
+- [Testes Automatizados](#-testes-automatizados)
 - [Deploy da Aplicação](#-deploy-da-aplicação)
 - [Vídeo Pitch](#-vídeo-pitch)
 - [Decisões Técnicas e Boas Práticas](#️-decisões-técnicas-e-boas-práticas)
@@ -79,14 +80,15 @@ A aplicação conta com uma interface moderna e responsiva, suporte a **modo esc
 | **HTML5** | — | Estrutura semântica dos templates |
 | **SCSS** | — | Estilos globais e por componente |
 
-### UI Components
+### UI Components e Testes
 
-| Biblioteca | Versão | Finalidade |
-|------------|--------|------------|
+| Biblioteca/Ferramenta | Versão | Finalidade |
+|-----------------------|--------|------------|
 | **PrimeNG** | `^20.4.0` | Componentes de UI (Table, Dialog, Button, Select, Tag, InputMask, etc.) |
 | **PrimeIcons** | `^7.0.0` | Biblioteca de ícones vetoriais |
 | **@primeuix/themes** | `^2.0.3` | Sistema de temas (preset Aura com modo escuro) |
 | **Angular CDK** | `^20.2.14` | Primitivas de acessibilidade e interação |
+| **Karma & Jasmine** | `~6.4.0` | Test Runner e Framework de asserções unitárias |
 
 ### Backend / Banco de Dados / Hospedagem
 
@@ -342,6 +344,11 @@ PrimeNG oferece um ecossistema rico de componentes prontos para produção:
 - **Backend-as-a-Service** — sem necessidade de manter servidor ou API própria
 - **Hosting integrado** — deploy de projetos Angular com CDN global em poucos minutos
 - **Escalabilidade automática** — ideal para protótipos e MVPs
+
+### Por que Testes Unitários Zoneless?
+
+A adoção do **Angular 20 Zoneless** (sem `Zone.js`) foi uma escolha visando o futuro do framework e maior performance na detecção de mudanças. Como consequência, as ferramentas convencionais de teste como `fakeAsync` perdem o sentido (já que dependem do Zone).
+Resolvemos o problema da assincronicidade utilizando fluxos modernos do próprio JavaScript (**async/await**) combinado com `fixture.whenStable()` para garantir que todas as asserções aguardem a atualização dos Signals e promessas de serviços mockados.
 
 ### Arquitetura Adotada
 
