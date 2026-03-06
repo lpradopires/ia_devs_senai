@@ -1,5 +1,3 @@
-# ia_devs_senai
-Curso de IA para Devs Senai - SC
 # 🏔️ Catarina Empreende
 
 > Plataforma web para gerenciamento de empreendimentos catarinenses, desenvolvida como projeto do Curso de IA para Devs — SENAI-SC.
