@@ -12,6 +12,7 @@
 - [Estrutura do Projeto](#-estrutura-do-projeto)
 - [Pré-requisitos](#-pré-requisitos)
 - [Como Rodar Localmente](#️-como-rodar-localmente)
+- [Testes Automatizados](#-testes-automatizados)
 - [Deploy da Aplicação](#-deploy-da-aplicação)
 - [Vídeo Pitch](#-vídeo-pitch)
 - [Decisões Técnicas e Boas Práticas](#️-decisões-técnicas-e-boas-práticas)
@@ -79,14 +80,15 @@ A aplicação conta com uma interface moderna e responsiva, suporte a **modo esc
 | **HTML5** | — | Estrutura semântica dos templates |
 | **SCSS** | — | Estilos globais e por componente |
 
-### UI Components
+### UI Components e Testes
 
-| Biblioteca | Versão | Finalidade |
-|------------|--------|------------|
+| Biblioteca/Ferramenta | Versão | Finalidade |
+|-----------------------|--------|------------|
 | **PrimeNG** | `^20.4.0` | Componentes de UI (Table, Dialog, Button, Select, Tag, InputMask, etc.) |
 | **PrimeIcons** | `^7.0.0` | Biblioteca de ícones vetoriais |
 | **@primeuix/themes** | `^2.0.3` | Sistema de temas (preset Aura com modo escuro) |
 | **Angular CDK** | `^20.2.14` | Primitivas de acessibilidade e interação |
+| **Karma & Jasmine** | `~6.4.0` | Test Runner e Framework de asserções unitárias |
 
 ### Backend / Banco de Dados / Hospedagem
 
@@ -246,6 +248,44 @@ Abra [http://localhost:4200](http://localhost:4200) no seu navegador.
 
 ---
 
+## 🧪 Testes Automatizados
+
+A aplicação conta com uma suíte de testes unitários configurada para rodar de forma escalável e integrada com as novas APIs do Angular 20 (ambientação Zoneless).
+
+### Tecnologias de Teste
+
+- **Test Runner:** [Karma](https://karma-runner.github.io/) (`~6.4.0`)
+- **Framework de Asserção:** [Jasmine](https://jasmine.github.io/) (`~5.1.0`)
+- **Ambiente:** Chrome Headless (para integração contínua e testes rápidos de terminal)
+- **Change Detection:** Configuração específica com `provideZonelessChangeDetection()` nos módulos de teste da aplicação.
+
+### Como Executar os Testes
+
+Para rodar **todos os testes** do projeto no modo interativo (abre o Chrome e escuta mudanças nos arquivos):
+
+```bash
+npm run test
+# ou
+ng test
+```
+
+Para rodar os testes **apenas uma vez** e de forma invisível (ideal para pipelines de CI/CD ou checagem rápida):
+
+```bash
+npx ng test --watch=false --browsers=ChromeHeadless
+```
+
+### O que é testado?
+
+- **Criação de Componentes:** Verificação se os componentes (`ListaEmpreendimento`, `FormularioEmpreendimento`, etc.) são instanciados corretamente.
+- **Validação de Formulários:** Testes do `ReactiveFormsModule`, garantindo que regras de obrigatoriedade e formatação (ex: e-mail) retornam os erros visuais adequados.
+- **Interações e Eventos:** Teste de cliques simulados, aberturas de modais (`p-dialog`), confirmações de exclusão (`ConfirmationService`) e envio de formulários salvos no Firebase.
+- **Mocks Genéricos:** O Firebase não é acessado durante os testes unitários. Os serviços são injetados utilizando `jasmine.createSpyObj` ou substituídos através do método `.overrideComponent()` do `TestBed`.
+
+> **Nota sobre o Angular 20:** Como o projeto utiliza Angular puramente **Zoneless** (sem `Zone.js`), métodos tradicionais como `fakeAsync` e `tick` do pacote de testes do Angular tradicional não são compatíveis. Todos os testes assíncronos deste projeto são resolvidos utilizando o fluxo nativo do JavaScript com funções `async/await` padrão.
+
+---
+
 ## 🌐 Deploy da Aplicação
 
 A aplicação está publicada e disponível no Firebase Hosting:
@@ -304,6 +344,11 @@ PrimeNG oferece um ecossistema rico de componentes prontos para produção:
 - **Backend-as-a-Service** — sem necessidade de manter servidor ou API própria
 - **Hosting integrado** — deploy de projetos Angular com CDN global em poucos minutos
 - **Escalabilidade automática** — ideal para protótipos e MVPs
+
+### Por que Testes Unitários Zoneless?
+
+A adoção do **Angular 20 Zoneless** (sem `Zone.js`) foi uma escolha visando o futuro do framework e maior performance na detecção de mudanças. Como consequência, as ferramentas convencionais de teste como `fakeAsync` perdem o sentido (já que dependem do Zone).
+Resolvemos o problema da assincronicidade utilizando fluxos modernos do próprio JavaScript (**async/await**) combinado com `fixture.whenStable()` para garantir que todas as asserções aguardem a atualização dos Signals e promessas de serviços mockados.
 
 ### Arquitetura Adotada
 
@@ -428,7 +473,7 @@ style(formulario): padroniza espaçamento dos campos com variáveis CSS
 - [ ] **Mapa interativo** — visualizar todos os empreendimentos em um mapa com marcadores (Leaflet ou Google Maps API)
 - [ ] **PWA** — suporte offline com Service Workers
 - [ ] **Exportação de dados** — download da lista em formato CSV ou PDF
-- [ ] **Testes unitários e de integração** — cobertura com Karma/Jasmine e Cypress para E2E
+- [ ] **Testes E2E (End-to-End)** — cobertura estendida utilizando Cypress ou Playwright
 - [ ] **Internacionalização (i18n)** — suporte a múltiplos idiomas
 
 ---
