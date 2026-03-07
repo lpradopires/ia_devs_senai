@@ -52,8 +52,8 @@ A aplicação conta com uma interface moderna e responsiva, suporte a **modo esc
 - **E-mail de Contato** — validação de formato opcional
 - **WhatsApp** — máscara `(99) 99999-9999` para contato rápido
 - **Status** — `Ativo` ou `Inativo`, exibido com tag colorida
-- **Endereço** — logradouro, bairro e CEP
-- **Localização** — abertura direta no Google Maps pelo endereço cadastrado
+- **Endereço Completo** — logradouro, número, complemento, bairro e CEP
+- **Localização** — abertura direta no Google Maps pelo endereço completo cadastrado
 - **Imagens** — galeria de fotos associadas ao empreendimento
 - **Data de Cadastro** — gerada automaticamente e exibida na tabela
 
@@ -63,9 +63,22 @@ A aplicação conta com uma interface moderna e responsiva, suporte a **modo esc
 - ↕️ **Ordenação de Colunas** — clique no cabeçalho de qualquer coluna para ordenar
 - 🌙 **Modo Escuro / Claro** — alternância via botão na barra de navegação
 - 📸 **Galeria de Imagens** — visualizador de fotos por empreendimento com zoom
-- 📍 **Integração com Google Maps** — abre a localização no Maps em nova aba
+- 📍 **Integração com Google Maps** — abre a localização no Maps em nova aba com endereço completo
 - ⚡ **Dados em Tempo Real** — a lista se atualiza automaticamente sem recarregar a página (Firebase onValue listener)
 - 📊 **Paginação** — 10 registros por página com barra de paginação fixa
+
+### 📊 Dashboard Analítico
+
+Tela de painel de controle com métricas e gráficos interativos, alimentada em tempo real pelo Firebase.
+
+| Componente | Descrição |
+|------------|-----------|
+| **Cards KPI** | 4 cards coloridos exibindo: Total de Empreendimentos, Ativos, Inativos e Municípios únicos |
+| **Gráfico Donut** | Distribuição de empreendimentos por Categoria/Segmento |
+| **Gráfico de Barras — Cidades** | Top 10 municípios com mais empreendimentos cadastrados |
+| **Gráfico de Barras — Regiões** | Distribuição por Região de SC (Grande Florianópolis, Vale do Itajaí, Norte, Oeste, Sul, Serrana) |
+| **Tabela-Resumo** | Lista de categorias com barra de progresso visual e percentual relativo |
+| **Botão Atualizar** | Força o re-render dos gráficos e exibe timestamp da última atualização manual |
 
 ---
 
@@ -84,10 +97,11 @@ A aplicação conta com uma interface moderna e responsiva, suporte a **modo esc
 
 | Biblioteca/Ferramenta | Versão | Finalidade |
 |-----------------------|--------|------------|
-| **PrimeNG** | `^20.4.0` | Componentes de UI (Table, Dialog, Button, Select, Tag, InputMask, etc.) |
+| **PrimeNG** | `^20.4.0` | Componentes de UI (Table, Dialog, Button, Select, Tag, InputMask, Chart, etc.) |
 | **PrimeIcons** | `^7.0.0` | Biblioteca de ícones vetoriais |
 | **@primeuix/themes** | `^2.0.3` | Sistema de temas (preset Aura com modo escuro) |
 | **Angular CDK** | `^20.2.14` | Primitivas de acessibilidade e interação |
+| **Chart.js** | `^4.x` | Renderização de gráficos (Donut, Barras) no Dashboard |
 | **Karma & Jasmine** | `~6.4.0` | Test Runner e Framework de asserções unitárias |
 
 ### Backend / Banco de Dados / Hospedagem
@@ -112,12 +126,18 @@ A aplicação conta com uma interface moderna e responsiva, suporte a **modo esc
 
 ```
 catarina-empreende/
+├── public/
+│   ├── assets/
+│   │   └── Bandeira_de_Santa_Catarina.svg.png  # Imagem padrão servida estaticamente
+│   └── favicon.ico
 ├── src/
 │   ├── app/
 │   │   ├── core/
 │   │   │   └── firebase/
 │   │   │       └── realtime-db.service.ts   # Serviço genérico de acesso ao Realtime DB (CRUD base)
 │   │   ├── features/
+│   │   │   ├── dashbord/
+│   │   │   │   └── dashbord.ts              # Dashboard analítico (KPIs + gráficos em tempo real)
 │   │   │   └── empreendimentos/
 │   │   │       ├── model/
 │   │   │       │   └── empreendimento.model.ts  # Interfaces e types do domínio
@@ -135,7 +155,7 @@ catarina-empreende/
 │   ├── environments/
 │   │   └── environment.ts        # Credenciais do Firebase (não commitado)
 │   ├── assets/
-│   │   └── bandeira-sc.png       # Ícone da aplicação
+│   │   └── Bandeira_de_Santa_Catarina.svg.png  # Imagem asset estático local
 │   ├── styles.scss               # Estilos globais
 │   ├── main.ts                   # Bootstrap da aplicação Angular
 │   └── index.html                # HTML raiz da SPA
@@ -149,8 +169,11 @@ catarina-empreende/
 
 - **`core/`** — serviços de infraestrutura compartilhados por toda a aplicação (ex: acesso genérico ao Firebase).
 - **`features/`** — módulos de domínio organizados por funcionalidade. Cada feature contém seu `model`, `pages` e `services`.
+  - **`dashbord/`** — Dashboard analítico com métricas em tempo real (KPIs, gráficos por categoria, cidade e região).
+  - **`empreendimentos/`** — CRUD completo de empreendimentos catarinenses.
 - **`shared/`** — componentes, pipes e diretivas reutilizáveis entre múltiplas features.
 - **`environments/`** — configurações por ambiente (desenvolvimento e produção), contendo as credenciais do Firebase.
+- **`public/assets/`** — arquivos estáticos servidos diretamente pelo build (novo padrão Angular 17+).
 
 ---
 
@@ -244,7 +267,7 @@ ng serve
 
 Abra [http://localhost:4200](http://localhost:4200) no seu navegador.
 
-> Na primeira execução, a aplicação irá popular automaticamente o banco com **20 empreendimentos reais** de municípios catarinenses para demonstração.
+> Na primeira execução (com banco vazio), a aplicação irá popular automaticamente com **empreendimentos reais de Santa Catarina** para demonstração, utilizando a lista definida em `gerarDadosAleatorios()` no componente de listagem.
 
 ---
 
@@ -469,7 +492,7 @@ style(formulario): padroniza espaçamento dos campos com variáveis CSS
 - [ ] **Autenticação com Firebase Auth** — login com Google para controle de acesso
 - [ ] **Upload de imagens** — integração com Firebase Storage para upload de fotos reais
 - [ ] **Filtros avançados** — filtro por segmento, município e status em painéis laterais
-- [ ] **Dashboard com métricas** — gráficos de quantidade por segmento e município (Chart.js ou PrimeNG Charts)
+- [x] **Dashboard com métricas** — ✅ implementado! Gráficos por categoria, cidade e região com Chart.js e PrimeNG Charts
 - [ ] **Mapa interativo** — visualizar todos os empreendimentos em um mapa com marcadores (Leaflet ou Google Maps API)
 - [ ] **PWA** — suporte offline com Service Workers
 - [ ] **Exportação de dados** — download da lista em formato CSV ou PDF
@@ -484,6 +507,7 @@ style(formulario): padroniza espaçamento dos campos com variáveis CSS
 |------------|----------------------|
 | **Angular v20** | [v20.angular.dev/overview](https://v20.angular.dev/overview) |
 | **PrimeNG v20** | [v20.primeng.org/installation](https://v20.primeng.org/installation) |
+| **Chart.js** | [chartjs.org](https://www.chartjs.org/docs/latest/) |
 | **Node.js** | [nodejs.org](https://nodejs.org/en/) |
 | **Firebase** | [firebase.google.com](https://firebase.google.com/?hl=pt-br) |
 
